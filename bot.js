@@ -2,13 +2,11 @@ import 'dotenv/config'
 import { Telegraf, Markup } from 'telegraf' 
 
 const bot = new Telegraf(process.env.token)
-const userPedido = []
 
-const produtos = [{titleProduto: "X-SALADA", categoria: 'Lanches', preco: 10}, {titleProduto: "X-BACON", categoria: 'produto', preco: 15}, {titleProduto: "X-TUDO", categoria: 'produto', preco: 25}]
-const categorias = ["Lanches", "Bebidas", "Porções"]
+const produtos = [{titleProduto: 'X-SALADA COMPLETO', categoria: 'Lanches', preco: 10}, {titleProduto: 'X-BACON', categoria: 'produto', preco: 15}, {titleProduto: 'X-TUDO', categoria: 'produto', preco: 25}, {system: 'voltar', titleProduto: 'Voltar'}]
+const categorias = ['Lanches', 'Bebidas', 'Porções']
 
 const carrinho =  []
-
 const pedidoCliente = {
   categoria: '',
   produto: '',
@@ -23,12 +21,11 @@ const buttonsCategorias = (categorias) => Markup.inlineKeyboard(
 )
 
 const buttonsProdutos = (produtos) => Markup.inlineKeyboard(
-  produtos.map(item => Markup.button.callback(`${item.titleProduto}`, `adicionaCarrinho ${item.titleProduto} Preco ${item.preco}`)),
+  produtos.map(item => Markup.button.callback(`${item.titleProduto}`, `${item.system ? 'Voltar': 'adicionaCarrinho '} ${item.titleProduto} Preco ${item.preco}`)),
   {
     columns: 1
   }
 )
-
 
 
 bot.start(async ctx => {
@@ -37,6 +34,11 @@ bot.start(async ctx => {
   await ctx.reply('O que deseja?', buttonsCategorias(categorias))
 })
 
+
+
+bot.action(/Voltar (.+)/, async (ctx, next) => {
+  await ctx.reply('O que deseja?', buttonsCategorias(categorias))
+})
 
 bot.action(/adicionaCategoria (.+)/, async (ctx, next) => {
   pedidoCliente.categoria = ctx.match[1]
@@ -47,22 +49,21 @@ bot.action(/adicionaCategoria (.+)/, async (ctx, next) => {
 
 
 bot.action(/adicionaCarrinho (.+)/, async (ctx, next) => {
- const dadosPedido = ctx.match[1].split(' ')
-  pedidoCliente.produto = dadosPedido[0]
-  pedidoCliente.preco = parseInt(dadosPedido[2])
+  const dadosPedido = ctx.match[1].split(' ')
+  const posicaoPreco = dadosPedido.findIndex(preco => preco === 'Preco')
+  let montaNomeProduto = ''
+  for(let i = 0; i < posicaoPreco; i++) {
+    montaNomeProduto = `${montaNomeProduto}` +  ' ' + `${dadosPedido[i]}`
+  }
+  pedidoCliente.produto = montaNomeProduto
+  pedidoCliente.preco = parseInt(dadosPedido[posicaoPreco + 1])
   console.log(pedidoCliente)
   next()
   
 })
 
-bot.on('text', (ctx, next) => {
-  console.log(ctx)
-  const pedido = ctx.update.message.text
-  // const response = findAnswer(msg)
-  userPedido.push(pedido)
-  ctx.reply(`${pedido} Adicionado ao carrinho.`)
-  next()
-})
+
+
 
 // bot.telegram.sendMessage('5287311557', 'eU enviei minha primeira mensagem fuck')
 // bot.telegram.sendMessage('-775608967', "olá grupo")
