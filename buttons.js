@@ -1,5 +1,7 @@
 import { Markup } from 'telegraf' 
 
+const btnFazerPedido = ["Fazer Pedido"]
+
 const buttonsCategorias = (categorias) => Markup.inlineKeyboard(
   categorias.map(item => Markup.button.callback(`${item}`, `adicionaCategoria ${item}`)),
   {
@@ -22,8 +24,17 @@ const buttonsFinalizarPedido = (btnsFinalizar) => Markup.inlineKeyboard(
   }
 )
 
+
+const buttonFazerPedido = () => Markup.inlineKeyboard(
+  btnFazerPedido.map(btn => Markup.button.callback(`${btn}`, `fazerPedido ${btn}`)),
+  {
+    columns: 1
+  }
+)
+
+
 const buttonsMenuPrincipal = (btnsPrincipal) => Markup.inlineKeyboard(
-  btnsPrincipal.map(btn => Markup.button.callback(`${btn}`, `fazerPedido ${btn}`)),
+  btnsPrincipal.map(btn => Markup.button.callback(`${btn}`, `${btn === 'Fazer pedido' ? 'fazerPedido' : 'verCardapio'} ${btn}`)),
   {
     columns: 1
   }
@@ -32,5 +43,6 @@ export {
   buttonsCategorias,
   buttonsProdutos,
   buttonsFinalizarPedido,
-  buttonsMenuPrincipal
+  buttonsMenuPrincipal,
+  buttonFazerPedido
 }

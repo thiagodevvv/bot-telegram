@@ -4,8 +4,10 @@ import {
   buttonsCategorias,
   buttonsProdutos,
   buttonsFinalizarPedido,
-  buttonsMenuPrincipal
+  buttonsMenuPrincipal,
+  buttonFazerPedido
 } from './buttons.js'
+import cardapio from './cardapio.js'
 
 const bot = new Telegraf(process.env.token)
 
@@ -24,6 +26,11 @@ let totalPedido = 0
 bot.start(async ctx => {
   const from = ctx.update.message.from
   await ctx.reply(`Seja bem vindo, ${from.first_name}`, buttonsMenuPrincipal(btnsMenuPrincipal))
+})
+
+
+bot.action(/verCardapio (.+)/, async (ctx, next) => {
+  await ctx.reply(`${cardapio}`, buttonFazerPedido())
 })
 
 bot.action(/fazerPedido (.+)/, async (ctx, next) => {
