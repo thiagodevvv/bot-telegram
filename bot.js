@@ -1,5 +1,10 @@
 import 'dotenv/config'
-import { Telegraf, Markup } from 'telegraf' 
+import { Telegraf } from 'telegraf'
+import {
+  buttonsCategorias,
+  buttonsProdutos,
+  buttonsFinalizarPedido
+} from './buttons.js'
 
 const bot = new Telegraf(process.env.token)
 
@@ -10,43 +15,15 @@ const btnsFinalizarPedido = ['Adicionar mais item','Finalizar Pedido', 'Remover 
 const carrinho =  []
 
 let pedidosApresentaCarrinho = ''
-const setInitialState = () => {
-  pedidoCliente.categoria = '',
-  pedidoCliente.produto = '',
-  pedidoCliente.preco = 0
-  pedidoCliente.qnt = 1
-}
-
 let totalPedido = 0
 
-const buttonsCategorias = (categorias) => Markup.inlineKeyboard(
-  categorias.map(item => Markup.button.callback(`${item}`, `adicionaCategoria ${item}`)),
-  {
-    columns: 1
-  }
-)
 
-const buttonsProdutos = (produtos) => Markup.inlineKeyboard(
-  produtos.map(item => Markup.button.callback(`${item.titleProduto}`, `${item.system ? 'Voltar': 'adicionaCarrinho '} ${item.titleProduto} Preco ${item.preco}`)),
-  {
-    columns: 1
-  }
-)
-
-
-const buttonsFinalizarPedido = (btnsFinalizar) => Markup.inlineKeyboard(
-  btnsFinalizar.map(item => Markup.button.callback(`${item}`, `${item}`)),
-  {
-    columns: 1
-  }
-)
 
 bot.start(async ctx => {
   const from = ctx.update.message.from
   await ctx.reply(`Seja bem vindo, ${from.first_name}`)
   await ctx.reply('O que deseja?', buttonsCategorias(categorias))
 })
-
 
 
 bot.action(/Voltar (.+)/, async (ctx, next) => {
