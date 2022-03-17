@@ -3,12 +3,14 @@ import { Telegraf } from 'telegraf'
 import {
   buttonsCategorias,
   buttonsProdutos,
-  buttonsFinalizarPedido
+  buttonsFinalizarPedido,
+  buttonsMenuPrincipal
 } from './buttons.js'
 
 const bot = new Telegraf(process.env.token)
 
-const produtos = [{titleProduto: 'X-SALADA COMPLETO', categoria: 'Lanches', preco: 10}, {titleProduto: 'X-BACON', categoria: 'produto', preco: 15}, {titleProduto: 'X-TUDO', categoria: 'produto', preco: 25}, {system: 'voltar', titleProduto: 'Voltar'}]
+const produtos = [{titleProduto: 'X-SALADA COMPLETO', categoria: 'Lanches', preco: 10}, {titleProduto: 'X-BACON', categoria: 'produto', preco: 15}, {titleProduto: 'X-TUDO', categoria: 'produto', preco: 25}, {system: 'voltar', titleProduto: 'Voltar Menu Principal'}]
+const btnsMenuPrincipal = ["Ver Cardápio", "Fazer Pedido"]
 const categorias = ['Lanches', 'Bebidas', 'Porções']
 const btnsFinalizarPedido = ['Adicionar mais item','Finalizar Pedido', 'Remover item']
 
@@ -21,13 +23,14 @@ let totalPedido = 0
 
 bot.start(async ctx => {
   const from = ctx.update.message.from
-  await ctx.reply(`Seja bem vindo, ${from.first_name}`)
-  await ctx.reply('O que deseja?', buttonsCategorias(categorias))
+  await ctx.reply(`Seja bem vindo, ${from.first_name}`, buttonsMenuPrincipal(btnsMenuPrincipal))
 })
 
-
-bot.action(/Voltar (.+)/, async (ctx, next) => {
+bot.action(/fazerPedido (.+)/, async (ctx, next) => {
   await ctx.reply('O que deseja?', buttonsCategorias(categorias))
+})
+bot.action(/Voltar (.+)/, async (ctx, next) => {
+  await ctx.reply('Selecione a categoria que deseja', buttonsCategorias(categorias))
 })
 
 bot.action(/adicionaCategoria (.+)/, async (ctx, next) => {
@@ -52,23 +55,17 @@ bot.action(/adicionaCarrinho (.+)/, async (ctx, next) => {
   }
 
   if(carrinho.length == 0) {
-    console.log(carrinho)
-    console.log('iffffsssss///////')
     pedidoCliente.qnt = 1
     carrinho.push(pedidoCliente)
   } 
   else {
-    console.log('else')
-    console.log(carrinho)
     const temNoArray  =  carrinho.findIndex(item => item.produto === pedidoCliente.produto) 
     if(temNoArray < 0) carrinho.push(pedidoCliente)
     else carrinho[temNoArray].qnt = carrinho[temNoArray].qnt + 1 
   }
-    carrinho.map(item => {
-      pedidosApresentaCarrinho = `${pedidosApresentaCarrinho} \n ${item.produto} - Quantidade: ${item.qnt}x \n `
-    })
-    console.log(pedidosApresentaCarrinho)
-  console.log(carrinho)  
+  carrinho.map(item => {
+    pedidosApresentaCarrinho = `${pedidosApresentaCarrinho} \n ${item.produto} - Quantidade: ${item.qnt}x \n `
+  })  
   await ctx.reply(`Confira seu carrinho \n\n ${pedidosApresentaCarrinho} `)
   carrinho.forEach(item => {
     const totalPorProduto = item.preco * item.qnt
@@ -76,7 +73,6 @@ bot.action(/adicionaCarrinho (.+)/, async (ctx, next) => {
   })
   await ctx.reply(`Total pedido: R$${totalPedido}`, buttonsFinalizarPedido(btnsFinalizarPedido))
   pedidosApresentaCarrinho = ''
-  console.log(pedidosApresentaCarrinho)
 })
 
 

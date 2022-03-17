@@ -22,9 +22,15 @@ const buttonsFinalizarPedido = (btnsFinalizar) => Markup.inlineKeyboard(
   }
 )
 
-
+const buttonsMenuPrincipal = (btnsPrincipal) => Markup.inlineKeyboard(
+  btnsPrincipal.map(btn => Markup.button.callback(`${btn}`, `fazerPedido ${btn}`)),
+  {
+    columns: 1
+  }
+)
 export {
   buttonsCategorias,
   buttonsProdutos,
-  buttonsFinalizarPedido
+  buttonsFinalizarPedido,
+  buttonsMenuPrincipal
 }
