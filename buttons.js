@@ -34,7 +34,15 @@ const buttonFazerPedido = () => Markup.inlineKeyboard(
 
 
 const buttonsMenuPrincipal = (btnsPrincipal) => Markup.inlineKeyboard(
-  btnsPrincipal.map(btn => Markup.button.callback(`${btn}`, `${btn === 'Fazer pedido' ? 'fazerPedido' : 'verCardapio'} ${btn}`)),
+  btnsPrincipal.map(btn => Markup.button.callback(`${btn}`, `${btn === 'Fazer Pedido' ? 'fazerPedido' : 'verCardapio'} ${btn}`)),
+  {
+    columns: 1
+  }
+)
+
+
+const buttonsListaRemoveCarrinho = (listaCarrinho) => Markup.inlineKeyboard(
+  listaCarrinho.map(item => Markup.button.callback(`${item.produto}`, `removeItem ${item.produto}`)),
   {
     columns: 1
   }
@@ -44,5 +52,6 @@ export {
   buttonsProdutos,
   buttonsFinalizarPedido,
   buttonsMenuPrincipal,
-  buttonFazerPedido
+  buttonFazerPedido,
+  buttonsListaRemoveCarrinho
 }
