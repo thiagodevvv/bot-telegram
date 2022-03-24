@@ -126,7 +126,8 @@ bot.action(/confirmaEndereco (.+)/, async (ctx, next) => {
 })
 
 bot.action(/naoConfirmaEndereco (.+)/, async (ctx, next) => {
-	console.log('Nao confirmou Endereco')
+	stage = 1
+	await ctx.reply('Digite seu endereço ou envie sua localização')
 })
 
 bot.on('location', (ctx, next) => {
