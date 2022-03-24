@@ -1,12 +1,13 @@
 import 'dotenv/config'
-import { Telegraf } from 'telegraf'
+import { Telegraf, Scenes } from 'telegraf'
 import {
   buttonsCategorias,
   buttonsProdutos,
   buttonsFinalizarPedido,
   buttonsMenuPrincipal,
   buttonFazerPedido,
-  buttonsListaRemoveCarrinho
+  buttonsListaRemoveCarrinho,
+  buttonsConfirmaEndereco
 } from './buttons.js'
 import {
   cardapio,
@@ -16,11 +17,13 @@ import {
   btnsFinalizarPedido
 } from './cardapio.js'
 
+
 const bot = new Telegraf(process.env.token)
 
 const carrinho =  []
 let pedidosApresentaCarrinho = ''
 let totalPedido = 0
+var stage = 0;
 
 
 bot.start(async ctx => {
@@ -45,9 +48,7 @@ bot.action(/Voltar (.+)/, async (ctx, next) => {
 
 bot.action(/adicionaCategoria (.+)/, async (ctx, next) => {
   const categoriaProduto = ctx.match[1]
-  await ctx.reply('Certo, agora selecione um item para colocar em seu carrinho', buttonsProdutos(produtos[`${categoriaProduto}`]))
-  next()
-  
+  await ctx.reply('Certo, agora selecione um item para colocar em seu carrinho', buttonsProdutos(produtos[`${categoriaProduto}`]))  
 })
 
 bot.action(/adicionaCarrinho (.+)/, async (ctx, next) => {
@@ -115,7 +116,28 @@ bot.action(/removeItem (.+)/, async (ctx, next) => {
 })
 
 bot.action(/Finalizar (.+)/, async (ctx, next) => {
-    console.log('finalizando.....')
+    stage = 1
+    await ctx.reply('Digite seu endereço ou envie sua localização, exemplo: Rua Alziro Zarur 10-35')
+})
+
+bot.action(/confirmaEndereco (.+)/, async (ctx, next) => {
+	await ctx.reply('Certo! Seu pedido foi anotado com sucesso!\n\n Obrigado por utilizar essa ferramenta para realizar seu pedido.')
+
+})
+
+bot.action(/naoConfirmaEndereco (.+)/, async (ctx, next) => {
+	console.log('Nao confirmou Endereco')
+})
+
+bot.on('location', (ctx, next) => {
+  console.log(ctx.update.message.location)
+})
+
+bot.on('text', async (ctx, next) => {
+	 if(stage == 1) {
+ 		await ctx.reply(`Confirma endereço? ${ctx.update.message.text}`, buttonsConfirmaEndereco())
+		stage  = 2
+	 }
 })
 
 bot.startPolling()
