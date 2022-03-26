@@ -54,6 +54,10 @@ const buttonsConfirmaEndereco = () => Markup.inlineKeyboard(
 	btnsConfirmaEndereco.map(btn => Markup.button.callback(`${btn}`, `${btn == 'Sim' ? 'confirmaEndereco': 'naoConfirmaEndereco'} ${btn}`))
 )
 
+const buttonsRetirarOuEntregar = () => Markup.inlineKeyboard(
+  ["Retirar no local", "Entregar"].map(btn => Markup.button.callback(`${btn}`, `${btn == 'Entregar' ? 'entregaPedido' : 'retirarPedido'} ${btn}`))
+)
+
 export {
   buttonsCategorias,
   buttonsProdutos,
@@ -61,5 +65,6 @@ export {
   buttonsMenuPrincipal,
   buttonFazerPedido,
   buttonsListaRemoveCarrinho,
-  buttonsConfirmaEndereco
+  buttonsConfirmaEndereco,
+  buttonsRetirarOuEntregar
 }

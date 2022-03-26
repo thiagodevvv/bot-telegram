@@ -7,7 +7,8 @@ import {
   buttonsMenuPrincipal,
   buttonFazerPedido,
   buttonsListaRemoveCarrinho,
-  buttonsConfirmaEndereco
+  buttonsConfirmaEndereco,
+  buttonsRetirarOuEntregar
 } from './buttons.js'
 import {
   cardapio,
@@ -106,8 +107,19 @@ stepHandler.action(/removeItem (.+)/, async (ctx) => {
 })
 
 stepHandler.action(/Finalizar (.+)/, async (ctx) => {
+  await ctx.reply('Muito bem! Selecione uma opção', buttonsRetirarOuEntregar())
+})
+
+stepHandler.action(/entregaPedido (.+)/, async (ctx) => {
     await ctx.reply('Digite seu endereço ou envie sua localização, exemplo: Rua Alziro Zarur 10-35')
     return ctx.wizard.next()
+})
+
+stepHandler.action(/retirarPedido (.+)/, async (ctx) => {
+  console.log(ctx.wizard.state)
+  //aqui mandar pro dashboard da loja 
+	await ctx.reply('Certo! Seu pedido foi anotado com sucesso!\n\n Obrigado por utilizar essa ferramenta para realizar seu pedido.')
+  ctx.scene.leave()
 })
 
 stepHandler.action(/confirmaEndereco (.+)/, async (ctx) => {
