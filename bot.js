@@ -92,8 +92,11 @@ stepHandler.action(/removeItem (.+)/, async (ctx) => {
   ctx.wizard.state.newArrCarrinho.map(item => {
     ctx.wizard.state.carrinho.push(item)
     ctx.wizard.state.pedidosApresentaCarrinho = `${ctx.wizard.state.pedidosApresentaCarrinho} \n ${item.produto} - Quantidade: ${item.qnt}x \n `
-  })  
-  await ctx.reply(`Confira seu carrinho \n\n ${ctx.wizard.state.pedidosApresentaCarrinho} `)
+  })
+  if(ctx.wizard.state.carrinho.length == 0)
+    await ctx.reply('\n\nCarrinho vazio!\n\n')
+  else
+    await ctx.reply(`Confira seu carrinho \n\n ${ctx.wizard.state.pedidosApresentaCarrinho} `)
   ctx.wizard.state.newArrCarrinho.forEach(item => {
     ctx.wizard.state.totalPorProduto = item.preco * item.qnt
     ctx.wizard.state.totalPedido = ctx.wizard.state.totalPedido + ctx.wizard.state.totalPorProduto
