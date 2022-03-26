@@ -1,5 +1,5 @@
 import 'dotenv/config'
-import { Telegraf, Scenes } from 'telegraf'
+import { Composer, Scenes, session, Telegraf } from 'telegraf'
 import {
   buttonsCategorias,
   buttonsProdutos,
@@ -17,128 +17,149 @@ import {
   btnsFinalizarPedido
 } from './cardapio.js'
 
+const stepHandler = new Composer()
 
-const bot = new Telegraf(process.env.token)
-
-const carrinho =  []
-let pedidosApresentaCarrinho = ''
-let totalPedido = 0
-var stage = 0;
-
-
-bot.start(async ctx => {
-  totalPedido = 0
-  carrinho.length = 0
-  const name = ctx.update.message.from.first_name
-  await ctx.reply(`Seja bem vindo, ${name}`, buttonsMenuPrincipal(btnsMenuPrincipal))
-})
-
-bot.action(/fazerPedido (.+)/, async (ctx, next) => {
-  totalPedido = 0
+stepHandler.action(/fazerPedido (.+)/, async (ctx) => {
   await ctx.reply('O que deseja?', buttonsCategorias(categorias))
 })
 
-bot.action(/verCardapio (.+)/, async (ctx, next) => {
+
+stepHandler.action(/verCardapio (.+)/, async (ctx) => {
   await ctx.reply(`${cardapio}`, buttonFazerPedido())
 })
 
-bot.action(/Voltar (.+)/, async (ctx, next) => {
-  await ctx.reply('Selecione a categoria que deseja', buttonsCategorias(categorias))
-})
-
-bot.action(/adicionaCategoria (.+)/, async (ctx, next) => {
+stepHandler.action(/adicionaCategoria (.+)/, async (ctx) => {
   const categoriaProduto = ctx.match[1]
   await ctx.reply('Certo, agora selecione um item para colocar em seu carrinho', buttonsProdutos(produtos[`${categoriaProduto}`]))  
 })
 
-bot.action(/adicionaCarrinho (.+)/, async (ctx, next) => {
-  totalPedido = 0
-  const dadosPedido = ctx.match[1].split(' ')
-  const posicaoPreco = dadosPedido.findIndex(preco => preco === 'Preco')
-  let montaNomeProduto = ''
-  for(let i = 0; i < posicaoPreco; i++) {
-    montaNomeProduto = `${montaNomeProduto}` +  ' ' + `${dadosPedido[i]}`
+
+stepHandler.action(/adicionaCarrinho (.+)/, async (ctx) => {
+  ctx.wizard.state.totalPedido = 0
+  ctx.wizard.state.pedidosApresentaCarrinho = ''
+  ctx.wizard.state.dadosPedido = ctx.match[1].split(' ')
+  ctx.wizard.state.posicaoPreco = ctx.wizard.state.dadosPedido.findIndex(preco => preco === 'Preco')
+  ctx.wizard.state.montaNomeProduto = ''
+  for(let i = 0; i < ctx.wizard.state.posicaoPreco; i++) {
+    ctx.wizard.state.montaNomeProduto = `${ctx.wizard.state.montaNomeProduto}` +  ' ' + `${ctx.wizard.state.dadosPedido[i]}`
   }
-  const pedidoCliente = {
-    produto: montaNomeProduto,
-    preco: parseInt(dadosPedido[posicaoPreco + 1]),
+
+  ctx.wizard.state.pedidoCliente = {
+    produto: ctx.wizard.state.montaNomeProduto,
+    preco: parseInt(ctx.wizard.state.dadosPedido[ctx.wizard.state.posicaoPreco + 1]),
     qnt: 1
   }
 
-  if(carrinho.length == 0) {
-    pedidoCliente.qnt = 1
-    carrinho.push(pedidoCliente)
+  if(ctx.wizard.state.carrinho.length == 0) {
+    ctx.wizard.state.pedidoCliente.qnt = 1
+    ctx.wizard.state.carrinho = []
+    ctx.wizard.state.carrinho.push(ctx.wizard.state.pedidoCliente)
   } 
   else {
-    const temNoArray  =  carrinho.findIndex(item => item.produto === pedidoCliente.produto) 
-    if(temNoArray < 0) carrinho.push(pedidoCliente)
-    else carrinho[temNoArray].qnt = carrinho[temNoArray].qnt + 1 
+    ctx.wizard.state.temNoArray = ctx.wizard.state.carrinho.findIndex(item => item.produto === ctx.wizard.state.pedidoCliente.produto) 
+    if(ctx.wizard.state.temNoArray < 0) ctx.wizard.state.carrinho.push(ctx.wizard.state.pedidoCliente)
+    else ctx.wizard.state.carrinho[ctx.wizard.state.temNoArray].qnt = ctx.wizard.state.carrinho[ctx.wizard.state.temNoArray].qnt + 1 
   }
-  carrinho.map(item => {
-    pedidosApresentaCarrinho = `${pedidosApresentaCarrinho} \n ${item.produto} - Quantidade: ${item.qnt}x \n `
+  ctx.wizard.state.carrinho.map(item => {
+    ctx.wizard.state.pedidosApresentaCarrinho = `${ctx.wizard.state.pedidosApresentaCarrinho} \n ${item.produto} - Quantidade: ${item.qnt}x \n `
   })  
-  await ctx.reply(`Confira seu carrinho \n\n ${pedidosApresentaCarrinho} `)
-  carrinho.forEach(item => {
-    const totalPorProduto = item.preco * item.qnt
-    totalPedido = totalPedido + totalPorProduto
+  await ctx.reply(`Confira seu carrinho \n\n ${ctx.wizard.state.pedidosApresentaCarrinho} `)
+  ctx.wizard.state.carrinho.forEach(item => {
+    ctx.wizard.state.totalPorProduto = item.preco * item.qnt
+    ctx.wizard.state.totalPedido = ctx.wizard.state.totalPedido + ctx.wizard.state.totalPorProduto
   })
-  await ctx.reply(`Total pedido: R$${totalPedido}`, buttonsFinalizarPedido(btnsFinalizarPedido))
-  pedidosApresentaCarrinho = ''
+  await ctx.reply(`Total pedido: R$${ctx.wizard.state.totalPedido}`, buttonsFinalizarPedido(btnsFinalizarPedido))
+  ctx.wizard.state.pedidosApresentaCarrinho = ''
 })
 
-bot.action(/Adicionar (.+)/, async (ctx, next) => {
-  totalPedido = 0
+
+stepHandler.action(/Adicionar (.+)/, async (ctx) => {
+  ctx.wizard.state.totalPedido = 0
   await ctx.reply('Certo, agora selecione um item para colocar em seu carrinho', buttonsCategorias(categorias))
 })
 
-bot.action(/Remover (.+)/, async (ctx, next) => {
-  await ctx.reply('Certo, agora selecione um item para remover do carrinho', buttonsListaRemoveCarrinho(carrinho))
+stepHandler.action(/Remover (.+)/, async (ctx) => {
+  await ctx.reply('Certo, agora selecione um item para remover do carrinho', buttonsListaRemoveCarrinho(ctx.wizard.state.carrinho))
 })
 
 
-bot.action(/removeItem (.+)/, async (ctx, next) => {
-  totalPedido = 0
-  const newArrCarrinho = carrinho.filter(item => {
+stepHandler.action(/removeItem (.+)/, async (ctx) => {
+  ctx.wizard.state.totalPedido = 0
+  ctx.wizard.state.newArrCarrinho = ctx.wizard.state.carrinho.filter(item => {
     if(item.produto !== ctx.match[1]) return item
   })
-  carrinho.length = 0
-  newArrCarrinho.map(item => {
-    carrinho.push(item)
-    pedidosApresentaCarrinho = `${pedidosApresentaCarrinho} \n ${item.produto} - Quantidade: ${item.qnt}x \n `
+  ctx.wizard.state.carrinho.length = 0
+  ctx.wizard.state.newArrCarrinho.map(item => {
+    ctx.wizard.state.carrinho.push(item)
+    ctx.wizard.state.pedidosApresentaCarrinho = `${ctx.wizard.state.pedidosApresentaCarrinho} \n ${item.produto} - Quantidade: ${item.qnt}x \n `
   })  
-  await ctx.reply(`Confira seu carrinho \n\n ${pedidosApresentaCarrinho} `)
-  newArrCarrinho.forEach(item => {
-    const totalPorProduto = item.preco * item.qnt
-    totalPedido = totalPedido + totalPorProduto
+  await ctx.reply(`Confira seu carrinho \n\n ${ctx.wizard.state.pedidosApresentaCarrinho} `)
+  ctx.wizard.state.newArrCarrinho.forEach(item => {
+    ctx.wizard.state.totalPorProduto = item.preco * item.qnt
+    ctx.wizard.state.totalPedido = ctx.wizard.state.totalPedido + ctx.wizard.state.totalPorProduto
   })
-  await ctx.reply(`Total pedido: R$${totalPedido}`, buttonsFinalizarPedido(btnsFinalizarPedido))
-  pedidosApresentaCarrinho = ''
+  await ctx.reply(`Total pedido: R$${ctx.wizard.state.totalPedido}`, buttonsFinalizarPedido(btnsFinalizarPedido))
+  ctx.wizard.state.pedidosApresentaCarrinho = ''
 })
 
-bot.action(/Finalizar (.+)/, async (ctx, next) => {
-    stage = 1
+stepHandler.action(/Finalizar (.+)/, async (ctx) => {
     await ctx.reply('Digite seu endereço ou envie sua localização, exemplo: Rua Alziro Zarur 10-35')
+    return ctx.wizard.next()
 })
 
-bot.action(/confirmaEndereco (.+)/, async (ctx, next) => {
+stepHandler.action(/confirmaEndereco (.+)/, async (ctx) => {
+  console.log(ctx.wizard.state)
+  //aqui mandar pro dashboard da loja 
 	await ctx.reply('Certo! Seu pedido foi anotado com sucesso!\n\n Obrigado por utilizar essa ferramenta para realizar seu pedido.')
-
+  ctx.scene.leave()
 })
 
-bot.action(/naoConfirmaEndereco (.+)/, async (ctx, next) => {
-	stage = 1
+stepHandler.action(/naoConfirmaEndereco (.+)/, async (ctx) => {
 	await ctx.reply('Digite seu endereço ou envie sua localização')
+  return ctx.wizard.next()
 })
 
-bot.on('location', (ctx, next) => {
-  console.log(ctx.update.message.location)
+
+
+stepHandler.use((ctx) => {
+	ctx.replyWithMarkdown('Por favor selecione usando o botão')
 })
 
-bot.on('text', async (ctx, next) => {
-	 if(stage == 1) {
- 		await ctx.reply(`Confirma endereço? ${ctx.update.message.text}`, buttonsConfirmaEndereco())
-		stage  = 2
-	 }
-})
 
-bot.startPolling()
+const stepsPedido = new Scenes.WizardScene(
+	'pedido',
+	async (ctx) => {
+    const name = ctx.update.message.from.first_name
+    ctx.wizard.state.carrinho = []
+    await ctx.reply(`Seja bem vindo, ${name}`, buttonsMenuPrincipal(btnsMenuPrincipal))
+		ctx.wizard.state.pedido = []
+		return ctx.wizard.next()
+	},
+	stepHandler,
+	async (ctx) => {
+    ctx.wizard.state.endereco = ctx.update.message.text
+    await ctx.reply(`O endereço: ${ctx.update.message.text} está correto?`, buttonsConfirmaEndereco())
+    return ctx.wizard.next()
+	},
+  stepHandler,
+  async (ctx) => {
+    ctx.wizard.state.endereco = ctx.update.message.text
+    await ctx.reply(`O endereço: ${ctx.update.message.text} está correto?`, buttonsConfirmaEndereco())
+    return ctx.wizard.next()
+	},
+  stepHandler
+)
+
+
+
+const bot = new Telegraf(process.env.token)
+const stage = new Scenes.Stage([stepsPedido], {
+	default: 'pedido'
+})
+bot.use(session())
+bot.use(stage.middleware())
+
+bot.launch()
+
+process.once('SIGINT', () => bot.stop('SIGINT'))
+process.once('SIGTERM', () => bot.stop('SIGTERM'))
