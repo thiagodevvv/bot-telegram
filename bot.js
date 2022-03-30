@@ -145,8 +145,11 @@ stepHandler.use((ctx) => {
 const stepsPedido = new Scenes.WizardScene(
 	'pedido',
 	async (ctx) => {
+    
+    ctx.wizard.state.telefoneCliente = ctx.update.message.from.id
     ctx.wizard.state.nome = ctx.update.message.from.first_name
     ctx.wizard.state.carrinho = []
+    console.log(ctx.wizard.state)
     await ctx.reply(`Seja bem vindo, ${ctx.wizard.state.nome}`, buttonsMenuPrincipal(btnsMenuPrincipal))
 		ctx.wizard.state.pedido = []
 		return ctx.wizard.next()
