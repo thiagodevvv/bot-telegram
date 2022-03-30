@@ -116,6 +116,7 @@ stepHandler.action(/entregaPedido (.+)/, async (ctx) => {
 })
 
 stepHandler.action(/retirarPedido (.+)/, async (ctx) => {
+  ctx.wizard.state.endereco = "retirada123$$"
   console.log(ctx.wizard.state)
   //aqui mandar pro dashboard da loja 
 	await ctx.reply('Certo! Seu pedido foi anotado com sucesso!\n\n Obrigado por utilizar essa ferramenta para realizar seu pedido.')
@@ -137,7 +138,7 @@ stepHandler.action(/naoConfirmaEndereco (.+)/, async (ctx) => {
 
 
 stepHandler.use((ctx) => {
-	ctx.replyWithMarkdown('Por favor selecione usando o botão')
+	ctx.replyWithMarkdown('Por favor selecione clicando no botão acima')
 })
 
 
@@ -146,7 +147,7 @@ const stepsPedido = new Scenes.WizardScene(
 	async (ctx) => {
     ctx.wizard.state.nome = ctx.update.message.from.first_name
     ctx.wizard.state.carrinho = []
-    await ctx.reply(`Seja bem vindo, ${ctx.wizard.name}`, buttonsMenuPrincipal(btnsMenuPrincipal))
+    await ctx.reply(`Seja bem vindo, ${ctx.wizard.state.nome}`, buttonsMenuPrincipal(btnsMenuPrincipal))
 		ctx.wizard.state.pedido = []
 		return ctx.wizard.next()
 	},
@@ -171,8 +172,10 @@ const bot = new Telegraf(process.env.token)
 const stage = new Scenes.Stage([stepsPedido], {
 	default: 'pedido'
 })
-bot.use(session())
+bot.use(session())  
 bot.use(stage.middleware())
+
+
 
 bot.launch()
 
