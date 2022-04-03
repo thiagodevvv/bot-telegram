@@ -1,4 +1,5 @@
 import 'dotenv/config'
+import axios from 'axios'
 import { Composer, Scenes, session, Telegraf } from 'telegraf'
 import {
   buttonsCategorias,
@@ -145,11 +146,13 @@ stepHandler.use((ctx) => {
 const stepsPedido = new Scenes.WizardScene(
 	'pedido',
 	async (ctx) => {
-    
+    axios.post('http://localhost:3000/dev/addContato', {
+	telefoneCliente: `${ctx.update.message.from.id}`,
+	nomeCliente: `${ctx.update.message.from.first_name}`
+    }) 
     ctx.wizard.state.telefoneCliente = ctx.update.message.from.id
     ctx.wizard.state.nome = ctx.update.message.from.first_name
     ctx.wizard.state.carrinho = []
-    console.log(ctx.wizard.state)
     await ctx.reply(`Seja bem vindo, ${ctx.wizard.state.nome}`, buttonsMenuPrincipal(btnsMenuPrincipal))
 		ctx.wizard.state.pedido = []
 		return ctx.wizard.next()
