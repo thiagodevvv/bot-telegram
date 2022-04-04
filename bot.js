@@ -117,16 +117,27 @@ stepHandler.action(/entregaPedido (.+)/, async (ctx) => {
 })
 
 stepHandler.action(/retirarPedido (.+)/, async (ctx) => {
-  ctx.wizard.state.endereco = "retirada123$$"
-  console.log(ctx.wizard.state)
-  //aqui mandar pro dashboard da loja 
-	await ctx.reply('Certo! Seu pedido foi anotado com sucesso!\n\n Obrigado por utilizar essa ferramenta para realizar seu pedido.')
+  ctx.wizard.state.endereco = 'retirada123$$'
+  await axios.post('http://localhost:3000/dev/newPedido', {
+	  carrinho: ctx.wizard.state.carrinho,
+	  endereco: 'retirada123$$',
+	  totalPedido: `${ctx.wizard.state.totalPedido}`,
+	  telefoneCliente: `${ctx.wizard.state.telefoneCliente}`,
+	  nomeCliente: ctx.wizard.state.nomeCliente
+  })	
+ await ctx.reply('Certo! Seu pedido foi anotado com sucesso!\n\n Obrigado por utilizar essa ferramenta para realizar seu pedido.')
   ctx.scene.leave()
 })
 
 stepHandler.action(/confirmaEndereco (.+)/, async (ctx) => {
-  console.log(ctx.wizard.state)
-  //aqui mandar pro dashboard da loja 
+	await axios.post('http://localhost:3000/dev/newPedido', {
+		carrinho: ctx.wizard.state.carrinho,
+		endereco: ctx.wizard.state.endereco,
+		totalPedido: `${ctx.wizard.state.totalPedido}`,
+		telefoneCliente: `${ctx.wizard.state.telefoneCliente}`,
+		nomeCliente: ctx.wizard.state.nomeCliente
+	})
+
 	await ctx.reply('Certo! Seu pedido foi anotado com sucesso!\n\n Obrigado por utilizar essa ferramenta para realizar seu pedido.')
   ctx.scene.leave()
 })
@@ -151,9 +162,9 @@ const stepsPedido = new Scenes.WizardScene(
 	nomeCliente: `${ctx.update.message.from.first_name}`
     }) 
     ctx.wizard.state.telefoneCliente = ctx.update.message.from.id
-    ctx.wizard.state.nome = ctx.update.message.from.first_name
+    ctx.wizard.state.nomeCliente = ctx.update.message.from.first_name
     ctx.wizard.state.carrinho = []
-    await ctx.reply(`Seja bem vindo, ${ctx.wizard.state.nome}`, buttonsMenuPrincipal(btnsMenuPrincipal))
+    await ctx.reply(`Seja bem vindo, ${ctx.wizard.state.nomeCliente}`, buttonsMenuPrincipal(btnsMenuPrincipal))
 		ctx.wizard.state.pedido = []
 		return ctx.wizard.next()
 	},
